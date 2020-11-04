@@ -1,0 +1,118 @@
+---
+title: "Functions for a better EDA"
+output: html_notebook
+---
+# EDA 
+
+The EDA — Exploratory Data Analysis — phase of the Data Mining framework is one of the main activities when it comes to extracting information from a dataset. Whatever your ultimate goal is: Neural Networks, Statistical Analysis, or Machine Learning, everything should start with a good understanding and overview of the data you’re dealing with.
+One of the main characteristics of an EDA is that it is a somewhat open process that depends on the toolbox and the inventiveness of the Data Scientist. Unfortunately, this is both a blessing and a curse, as a poorly done EDA may hide relevant relationships in the data or even impair the study’s validity.
+Some of the activities that are usually carried out in an EDA (this is by no means an exhaustive list):
+Analysis of numerical variables: average, minimum and maximum values, data distribution.
+Analysis of categorical variables: list of categories, frequency of records in each category.
+Diagnosis of outliers and how they impact the distribution of data for each variable.
+Analysis of correlations between predictive variables.
+Relationship between predictive variables vs. the outcome variable.
+There is no magic formula when it comes to EDA, but there are certainly some packages and functions to keep in mind when analyzing your data to maintain the perfect balance of agility and flexibility in your analysis.
+
+## The dataset
+The dataset used in this article is pretty well-known by everyone who has studied or practiced Data Science. It’s found here and it contains information on wines, made available in Portugal in 2008. It contains 1599 observations with 11 psychochemical attributes of Portuguese red wines and 1 target variable with a numerical discrete quality index from 0 to 10.
+
+```{r}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(knitr,dplyr,ggplot2,GGally,caret,purrr,      purrr, tidyr, dlookr, hexbin, PerformanceAnalytics, autoEDA, inspectdf,DataExplorer)
+wine = read.csv("winequality-red.csv")
+str(wine)
+#kableExtra, formattable, stringr,visNetwork,rpart,sparkline,randomForest,SmartEDA,dataMaid,autoEDA,ExPanDaR,corrplot, Rtsne, gbm, caret,reshape2,
+```
+## Overview of the dataset
+
+The visdat package has two interesting functions for a quick and practical overview of your dataset. The vis_dat function shows the variables, number of observations, and the type of each variable, in a way that’s very easy to interpret.
+
+```{r}
+visdat::vis_dat(wine,sort_type = FALSE)
+```
+
+The vis_miss function, from the same package, allows you to view the number of missing values ​​per variable, thus giving an overview of the integrity of the dataset.
+
+```{r}
+visdat::vis_miss(wine) #Visualização de missing data
+```
+
+Note: the dataset in question did not have any variable with Missing values, so some Missing Values were generated “artificially” for better visualization.
+
+## Visualizing numeric variables
+The package called funModeling provides great functions to plot useful information about your dataset, from basic information about the variables to more specific information such as the gain of information that each variable provides, and the relationship between the predictive variables and the result variable.
+One of the functions to keep in mind is the plot_num function, which plots a histogram of each numeric variable. There are several similar functions in other packages and even ways to do the same directly through ggplot2, but the plot_num function greatly simplifies the task.
+
+```{r}
+funModeling::plot_num(wine)
+```
+With that, you have everything in one plot — of course, depending on the number of variables — an overview of your numerical varieties.
+
+## Visualizing categorical variables
+
+As with numerical variables, it is important to have an overview of the categorical variables of your dataset. The inspect_cat function of the package inspectdf allows you to plot a summary of all categorical variables at once, 
+showing the most common categories within each one.
+
+![inspect_cat for viewing most common categories in categorical variables](https://miro.medium.com/max/840/0*_QuORp2UfDklFo2v)
+
+
+Note: the dataset used in the article did not have any categorical variables, so the image is illustrative and it was taken from here.
+
+## Outlier identification and treatment
+
+The dlookr package is a package that has very interesting functions of analysis, data processing, and reporting and brings some of the best solutions when it comes to EDA for the R language. One of the aspects in which this package shines is in its information about outliers in numerical variables.
+Firstly, the diagnose_outlier function generates a data frame with information for each variable: count of outliers, the outliers x total observations-ratio, and the average with and without outliers.
+
+```{r}
+dlookr::diagnose_outlier(wine)
+```
+
+The same package also offers the plot_outlier function, which shows plots for all variables in the value distribution with and without the aforementioned outliers.
+
+```{r}
+dlookr::plot_outlier(wine)[5]
+```
+
+As can be seen in the chlorides variable, several high values will certainly affect the results when applying statistical models, especially when some models have the assumption that the data is normally distributed.
+Note: it is important to remember that outliers should not always be removed, as in this case, they may indicate a specific subcategory of wines, especially due to the high concentration of outliers in this variable (7% of the values).
+
+## Correlation visualization
+
+There are many packages with functions to generate plots of correlations between variables in a dataset, but few provide a complete visualization of several factors like the chart.Correlation function of the PerformanceAnalytics package.
+
+```{r}
+chart.Correlation(wine[,2:7], histogram = TRUE, pch = 15)
+```
+t presents:
+Numerical correlations (Pearson’s coefficient) between numerical variables in the dataset, with larger sources for larger correlations
+A mini-scatterplot between each of the pairs of variables
+A histogram and density plot of each variable
+Note: the function only accepts a data frame with only numeric variables as input, so you should perform this treatment beforehand if your dataset contains categorical predictive variables. A suggestion for this treatment is using the method keep (available in the dplyr package):
+
+```{r}
+wine %>%
+    keep(is.numeric) %>%
+    head()
+```
+
+That way, you keep only the numeric variables in the dataset.
+
+## Automated report
+
+Some packages also have functions that automate the generation of EDA reports on their data set. The currently available report options vary in the extent and dimension of the analyzes presented, but all show some kind of summary of the dataset variables, information about missing values, histograms and bar graphs of each variable, etc.
+Possibly the best function I tested is the create_report function of the DataExplorer package. For a more standard analysis — which is already quite comprehensive — it allows you to generate a report with just one line of code:
+
+```{r}
+DataExplorer::create_report(wine,y = "quality")
+```
+
+Luckily, this function goes far beyond that, since it is possible to customize various aspects of the report, from changing the layout and themes to adjusting specific parameters or choosing exactly which graphics should be included in the report.
+Note: It is always important to remember that there is no single solution that covers all the bases when it comes to data analysis and visualization and the automated report generation functions should also not be treated as such.
+
+## TLDR
+Do you need a high-level overview of the dataset? visdat::vis_dat (overview) and visdat::vis_miss (missing values).
+Do you need information about the numeric variables? funModeling::plot_num.
+How about the categorical variables? inspectdf::inspect_cat.
+Correlations between variables? PerformanceAnalytics::chart.Correlation.
+How about an automated and configurable report?Package DataExplorer::create_report.
